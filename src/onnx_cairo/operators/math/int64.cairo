@@ -1,4 +1,3 @@
-// use decision_tree::onnx_cairo::operators::math::integer_trait::IntegerTrait;
 use decision_tree::onnx_cairo::utils::check_gas;
 
 // ====================== INT 64 ======================
@@ -9,9 +8,6 @@ trait IntegerTrait<T, U> {
     fn max(self: T, other: T) -> T;
     fn min(self: T, other: T) -> T;
 }
-
-use traits::TryInto;
-use traits::Into;
 
 // i64 represents a 64-bit integer.
 // The mag field holds the absolute value of the integer.

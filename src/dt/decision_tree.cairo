@@ -1,3 +1,6 @@
+use core::array::SpanTrait;
+use core::box::BoxTrait;
+use core::clone::Clone;
 use core::traits::Index;
 use core::debug::PrintTrait;
 use array::ArrayTrait;
@@ -5,6 +8,7 @@ use option::OptionTrait;
 use dict::Felt252Dict;
 use dict::Felt252DictTrait;
 use array::Array;
+use integer::BoundedInt;
 
 use traits::TryInto;
 use traits::Into;
@@ -18,13 +22,15 @@ use decision_tree::onnx_cairo::operators::math::matrix::MatrixTrait;
 #[derive(Drop)]
 struct DecisionTree {
     X: Matrix,
-    y: Matrix
+    y: Matrix,
+    score: u64
 }
 
 trait DTTrait {
     fn new(X: Matrix, y: Matrix) -> DecisionTree;
     fn class_count(self: @DecisionTree) -> Felt252Dict<felt252>;
     fn calculate_gini(self: @DecisionTree) -> u64;
+    fn find_split(self: @DecisionTree) -> u32;
 }
 
 impl DTImpl of DTTrait {
@@ -69,13 +75,23 @@ impl DTImpl of DTTrait {
             impurity -= (probability * probability) / impurity;
             counter += 1;
         };
-        impurity.print();
+
         impurity
+    }
+
+    fn find_split(self: @DecisionTree) -> u32 {
+        let X = self.X;
+        let data = X.get_column(0);
+
+        let arr = get_unique_values(data);
+        let arr_len = arr.len();
+        arr_len.print();
+        arr_len
     }
 }
 
 fn create_new(X: Matrix, y: Matrix) -> DecisionTree {
-    DecisionTree { X: X, y: y }
+    DecisionTree { X: X, y: y, score: BoundedInt::max() }
 }
 
 
@@ -98,3 +114,42 @@ fn unique_array(value: @DecisionTree) -> Array<felt252> {
     };
     a
 }
+
+fn get_unique_values(value: Array<i64>) -> Array<u32> {
+    let mut unique_values = ArrayTrait::<u32>::new();
+    let value_clone = value.span();
+    let value_len = value_clone.len();
+    let mut i = 0;
+
+    loop {
+        let mut j = 0;
+        let mut is_unique = true;
+        if i == value_len {
+            break ();
+        }
+        let unique_values_clone = unique_values.span();
+
+        loop {
+            if j == unique_values_clone.len() {
+                break ();
+            }
+            let value_i: u32 = value_clone.at(i).clone().mag.try_into().unwrap();
+            let values_j = unique_values_clone.at(j).clone();
+
+            if value_i == values_j {
+                is_unique = false;
+                break ();
+            }
+            j += 1;
+        };
+        let value_i: u32 = (*value.at(i)).mag.try_into().unwrap();
+
+        if is_unique == true {
+            unique_values.append(value_i);
+        }
+
+        i += 1;
+    };
+    unique_values
+}
+

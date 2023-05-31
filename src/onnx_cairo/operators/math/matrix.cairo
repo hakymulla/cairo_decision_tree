@@ -1,9 +1,8 @@
+use core::traits::Into;
 use array::ArrayTrait;
 use box::BoxTrait;
 use option::OptionTrait;
 use clone::Clone;
-
-
 use decision_tree::onnx_cairo::operators::math::int64;
 use decision_tree::onnx_cairo::operators::math::int64::i64;
 
@@ -17,6 +16,7 @@ struct Matrix {
 trait MatrixTrait {
     fn new(rows: usize, cols: usize, data: Array::<i64>) -> Matrix;
     fn get(self: @Matrix, i: usize, j: usize) -> i64;
+    fn get_column(self: @Matrix, i: usize) -> Array::<i64>;
     fn dot(self: @Matrix, other: @Matrix) -> Matrix;
     fn add(self: @Matrix, other: @Matrix) -> Matrix;
     fn len(self: @Matrix) -> usize;
@@ -51,6 +51,39 @@ impl MatrixImpl of MatrixTrait {
 
         *self.data.at(i * *self.cols + j)
     }
+
+    /// Gets the array of a particular column in the matrix.
+    ///
+    /// # Arguments
+    ///
+    /// * `self` - A reference to the matrix.
+    /// * `i` - The column index.
+    ///
+    /// # Returns
+    ///
+    /// The array of  the specified column.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the column index is out of bounds.
+
+    fn get_column(self: @Matrix, i: usize) -> Array::<i64> {
+        assert(i < *self.cols, 'column out of bounds');
+
+        let mut a = ArrayTrait::<i64>::new();
+        let mut counter = 0;
+
+        loop {
+            if counter == self.rows.clone() {
+                break ();
+            }
+            let value = *self.data.at(counter * *self.cols + i);
+            a.append(value);
+            counter += 1;
+        };
+        a
+    }
+
 
     /// Computes the matrix dot product of this matrix and another matrix.
     ///
