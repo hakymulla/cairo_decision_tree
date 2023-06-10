@@ -27,14 +27,13 @@ struct DecisionTree {
 
 #[derive(Drop)]
 struct BestSplit {
-    column: u64,
     score: u64,
     bestsplit: u64
 }
 
 trait DTTrait {
     fn new(X: Matrix, y: Matrix) -> DecisionTree;
-    fn find_split(self: @DecisionTree) -> u64;
+    fn find_split(self: @DecisionTree, column: u64) -> BestSplit;
 }
 
 impl DTImpl of DTTrait {
@@ -42,32 +41,16 @@ impl DTImpl of DTTrait {
         create_new(X, y)
     }
 
-    fn find_split(self: @DecisionTree) -> BestSplit {
+    fn find_split(self: @DecisionTree, column: u64) -> BestSplit {
         let X = self.X;
         let y = self.y;
         let score = self.score;
         let X_len: u64 = self.X.cols.clone().into();
-
+        let bestsplit = BestSplit { score: 0_u64, bestsplit: 0_u64 };
         let mut i = 0_u64;
 
-        loop {
-            if i == X_len {
-                break ();
-            }
-
-            let mut result = find_each_split(@X.get_column(i.try_into().unwrap()), y, score);
-            result.column = i;
-
-            result.column.print();
-            result.score.print();
-            result.bestsplit.print();
-            // result.column.print();
-            // result.score.print();
-            // result.bestsplit.print();
-
-            i += 1;
-        };
-        2_u64
+        let mut bestsplit = find_each_split(@X.get_column(column.try_into().unwrap()), y, score);
+        bestsplit
     }
 }
 
@@ -123,7 +106,6 @@ fn calculate_gini(value: @Matrix) -> u64 {
     //     dd.print();
     //     i += 1;
     // };
-    impurity.print();
     //////////////////////////
     impurity
 }
@@ -201,10 +183,7 @@ fn find_each_split(X: @Array<i64>, y: @Matrix, score: @u64) -> BestSplit {
     let mut i = 0;
     let mut best_split_value = 0;
 
-    // score.clone().print();
-
     loop {
-        // arr_len
         if i == arr_len {
             break ();
         }
@@ -218,22 +197,14 @@ fn find_each_split(X: @Array<i64>, y: @Matrix, score: @u64) -> BestSplit {
                 break ();
             }
 
-            // 'rotate'.print();
             let out = y.get(j, 0);
 
             let tt = *arr_span.at(i);
-            // tt.print();
-
             let dd = *data_span.at(j).mag;
-            // dd.print();
-
-            // out.mag.print();
 
             if *data_span.at(j).mag > *arr_span.at(i) {
-                // 'lhs'.print();
                 lhs.append(out)
             } else {
-                // 'rhs'.print();
                 rhs.append(out)
             }
 
@@ -245,19 +216,9 @@ fn find_each_split(X: @Array<i64>, y: @Matrix, score: @u64) -> BestSplit {
 
         let lhs_matrix = MatrixTrait::new(lhs_len, 1_u32, lhs);
         let rhs_matrix = MatrixTrait::new(rhs_len, 1_u32, rhs);
-
-        'lhsmatrix'.print();
-        lhs_len.print();
         let lhs_score = calculate_gini(@lhs_matrix);
-
-        'rhsmatrix'.print();
-        rhs_len.print();
         let rhs_score = calculate_gini(@rhs_matrix);
-
-        // lhs_score.print();
-        // rhs_score.print();
         let avg_score = (lhs_score + rhs_score) / 2;
-        avg_score.print();
 
         if avg_score < scores.clone() {
             best_split_value = *data_span.at(i).mag;
@@ -267,59 +228,6 @@ fn find_each_split(X: @Array<i64>, y: @Matrix, score: @u64) -> BestSplit {
         i += 1;
     };
 
-    BestSplit { column: 0_u64, score: scores.clone(), bestsplit: best_split_value }
+    BestSplit { score: scores.clone(), bestsplit: best_split_value }
 }
-// fn find_split(self: @DecisionTree) -> Array<u64> {
-//     let X = self.X;
-//     let y = self.y;
-//     let mut score = self.score;
-//     let data = X.get_column(0);
-//     let data_span = data.span();
-//     let data_len = data_span.len();
-
-//     let arr = get_unique_values(@data);
-//     let arr_span = arr.span();
-//     let arr_len = arr_span.len();
-
-//     let mut i = 0;
-//     score.clone().print();
-
-//     loop {
-//         if i == 1 {
-//             break ();
-//         }
-//         let mut j = 0;
-//         loop {
-//             let mut lhs = ArrayTrait::new();
-//             let mut rhs = ArrayTrait::new();
-//             if j == data_len {
-//                 break ();
-//             }
-//             let out = y.get(j, 0);
-//             if *data_span.at(j).mag > *arr_span.at(i) {
-//                 lhs.append(out)
-//             } else {
-//                 rhs.append(out)
-//             }
-
-//             let lhs_matrix = MatrixTrait::new(lhs.len(), 1_u32, lhs);
-//             let rhs_matrix = MatrixTrait::new(rhs.len(), 1_u32, rhs);
-
-//             let lhs_score = calculate_gini(@lhs_matrix);
-//             let rhs_score = calculate_gini(@rhs_matrix);
-//             let avg_score = (lhs_score + rhs_score) / 2;
-
-//             if avg_score < score.clone() {
-//                 score = @avg_score;
-//             }
-
-//             j += 1;
-//         };
-
-//         i += 1;
-//     };
-
-//     arr
-// }
-
 
