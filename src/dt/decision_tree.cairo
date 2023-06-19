@@ -120,6 +120,7 @@ fn unique_array(value: @Matrix) -> Array<felt252> {
         if counter == data_len.into() {
             break ();
         }
+
         let mut val = counts.index(counter);
         if val == 0 { // 'nothing'.print();
         } else {
